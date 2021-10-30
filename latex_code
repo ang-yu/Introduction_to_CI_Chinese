@@ -1,0 +1,574 @@
+\documentclass[t]{beamer}
+\mode<presentation> {
+\usetheme{Madrid}
+}
+
+\usepackage{graphicx} 
+\usepackage{booktabs} 
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{lipsum}
+\usepackage{cancel}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+
+% for Chinese characters (needs to be compiled using xelatex, change it under Menu on Overleaf)
+\usepackage{hyperref}
+\usepackage{xeCJK}
+\setCJKmainfont{FandolKai}
+
+\usepackage[normalem]{ulem}  % format of underlines
+
+\newcommand{\indep}{\rotatebox[origin=c]{90}{$\models$}}  % the independence symbol
+\newcommand{\semitransp}[2][35]{\color{fg!#1}#2}  % semi-transparant text
+
+\title[Causal inference]{因果推断：一种思维方式} 
+\author{
+禹昂
+} 
+\institute[] 
+{
+University of Wisconsin-Madison 
+\medskip
+}
+\date{October 30, 2021} 
+
+\begin{document}
+
+\begin{frame}
+\titlepage 
+\end{frame}
+
+\begin{frame}{Outline}
+    \begin{itemize}
+        \item 因果推断的几大传统
+        \item[] \hspace{1em}  潜在结果（potential outcomes）
+        \item[] \hspace{1em}  有向无环图（DAG）
+        \item 实例
+        \item[] \hspace{1em}  因果视角下的多元回归
+        \item[] \hspace{1em}  控制变量: 越多越好吗？
+        \item[] \hspace{1em}  交互项中的两个变量是对称的吗？
+        \item[] \hspace{1em}  2021年诺奖：工具变量与局部平均效应（LATE)
+        \item 拓展
+        \item[] \hspace{1em}  教科书，从入门到专题
+        \item[] \hspace{1em}  两位华人青年因果推断新星
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{因果推断的传统}
+\vspace{2em}
+\begin{tabular}{c|c|c}
+     代表人物 & 学科 & 流派 \\
+     \hline
+     Rubin, Imbens, Angrist & 统计，经济 & potential outcomes \\
+     \hline
+     Pearl & 计算机 & directed acyclic graph \\
+     \hline
+     Heckman & 经济 & parametric control function \\
+     \hline
+     Robins & 生统，流病 & marginal structural model \\ 
+     & & structural nested mean model\\
+     & & g-formula \\
+     \hline
+     Rosenbaum, VanderWeele & 统计，流病 & sensitivity analysis \\
+     \hline
+     Manski & 经济 & partial identification \\
+     \hline
+     Spirtes, Glymour & 哲学 & causal discovery  
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Potential outcomes}
+    \begin{itemize}
+        \item $Y(D=1)_i$; $Y(D=0)_i$
+        \item[] 假如（通过外在干预）上了清北，收入是多少；假如（通过外在干预）没上清北，收入是多少 
+        \item 个体层次的处理效应
+        \item[] $\tau_i = Y(D=1)_i-Y(D=0)_i$
+        \item 因果推断的根本问题：个体层次的处理效应不可观测
+        \item 群体层次上的平均效应：ATE, ATT, ATU
+    \end{itemize}
+    \vspace{1.5em}
+    \centering
+    \begin{tabular}{c|c|c|c}
+    D & Y(D=0) & Y(D=1) & Effect \\ 
+    \hline
+    0 & \checkmark & X & $\tau_1$ \\
+    \hline
+    0 & \checkmark & X & $\tau_2$ \\
+    \hline
+    1 & X & \checkmark & $\tau_3$ \\
+    \hline
+    1 & X & \checkmark & $\tau_4$ \\
+    \end{tabular}
+\end{frame}
+
+\begin{frame}
+    \begin{figure}[htp]
+    \centering
+    \includegraphics[width=6cm]{WechatIMG4.jpeg} \\
+    \includegraphics[width=6cm]{WechatIMG3.jpeg}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{用多元回归识别因果效应？}
+\begin{itemize}
+    \item 实践中社会学家往往将多元回归模型中的系数阐释为（因果）效应
+    \item 变量到底是怎么被“控制”住的？“when other variables are held constant", "controlling for ...", "ceteris paribus", "after accounting for other factors", "conditional on"
+    \item 多元回归模型只是一种optimization/inversion算法。
+\end{itemize}
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=5cm]{Screen Shot 2021-10-24 at 10.59.27 AM.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{用多元回归识别因果效应}
+    \begin{tikzpicture}
+    \node at (0,0) {};
+    \node at (1,1) {};
+    \node[anchor = west, align = left] (e1) at (0,1) {$\phantom{{}={}}  E[Y(D_i=1)_i]-E[Y(D_i=0)_i]$};
+    \node[anchor = west, align = left] (e2) at (0,0.2) {$=\sum E[Y(D_i=1)_i|X_i=x]P(X_i=x)- \sum E[Y(D_i=0)_i|X_i=x]P(X_i=x)$};
+    \node[anchor = west, align = left] (e3) at (0,-0.6) {$=\sum E[Y(D_i=1)_i|X_i=x, D_i=1]P(X_i=x)-$};
+    \node[anchor = west, align = left] (e4) at (0,-1.4) {\hspace{0.8em} $\sum E[Y(D_i=0)_i|X_i=x, D_i=0]P(X_i=x)$};
+    \node[anchor = west, align = left] (e5) at (0,-2.2) {$=\sum E[Y_i|X_i=x, D_i=1]P(X_i=x)-\sum E[Y_i|X_i=x, D_i=0]P(X_i=x)$};
+    \node[anchor = west, align = left] (e6) at (0,-3) {$=\beta$};
+    \node[anchor = west, align = left] (l1) at (7,1) { \textcolor{red}{\textbf{non-interference}}};
+    \node[anchor = west, align = left] (l2) at (8,-1) { \textcolor{red}{\textbf{conditional ignorability}}};
+    \node[anchor = west, align = left] (l3) at (8,-2.7) { \textcolor{red}{\textbf{consistency}}};
+    \node[anchor = west, align = left] (l3) at (4,-2.7) { \textcolor{red}{\textbf{positivity}}};
+    \node[anchor = west, align = left] (l4) at (6,-3.1) { \textcolor{red}{\textbf{functional form}}};
+    \node[anchor = west, align = left] (l5) at (0,-3.7) {conditional ignorability:$E(Y_i|D_i=1,X_i=x)=E(Y(D_i=1)_i|D_i=0,X_i=x)$};
+    \node[anchor = west, align = left] (l5) at (0,-4.5) {consistency:$E[Y(D_i=d)|D_i=d]=E[Y_i|D_i=d]$};
+    \node[anchor = west, align = left] (l5) at (0,-5.3) {positivity:$0<P(D_i=d|X_i=x)<1$};
+    \node[anchor = west, align = left] (l5) at (0,-6.1) {functional form:$E[Y_i|X_i=x,D_i=d]=\alpha + \beta d + \gamma x$};
+    \end{tikzpicture};
+\end{frame}
+
+\begin{frame}{用多元回归识别因果效应: 总结}
+    \begin{itemize}
+    \vspace{1em}
+        \item 用多元回归来识别平均处理效应依赖于多种因果假设和函数形式假设。
+    \vspace{1em}
+        \item 每种假设都可以被其他假设替代。但无假设不因果。因果推断是关于使用可信的假设推测反事实结果的学科。
+    \vspace{1em}
+        \item 传统统计是关于上面最后一步的：回归模型是对conditional expectation function的估计。
+    \vspace{1em}
+        \item 因果性存在于假设中，并不存在于统计方法中。估计是否因果，取决于假设是否成立。统计方法之间没有谁更因果一说。
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{用多元回归识别因果效应: 总结}
+    \begin{itemize}
+    \vspace{1em}
+        \item 对任何社会学实证问题，我们应该从估计目标(estimand)出发，基于可信的因果假设，获取估计方法(estimator)。\\
+    \vspace{1em}
+        \item[] \hspace{1em} 直接从回归模型(an estimator)出发是本末倒置的：回归模型是一个答案，但问题是什么？；从问题出发，我们才能灵活地寻找回答问题的方式。
+    \vspace{1em}
+        \item 不要阐释控制变量的系数。
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=3cm]{IL.jpeg}
+    \end{figure}
+    Lundberg, Ian, Rebecca Johnson, and Brandon M. Stewart. "What is your estimand? Defining the target quantity connects statistical evidence to theory." American Sociological Review 86.3 (2021): 532-565.
+    
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=2.5cm]{LJK-Portrait-1-768x716.jpeg}
+    \end{figure}
+    Keele, Luke, Randolph T. Stevenson, and Felix Elwert. "The causal interpretation of estimated associations in regression models." Political Science Research and Methods 8.1 (2020): 1-13.
+\end{frame}
+
+\begin{frame}{DAG}
+    \begin{itemize}
+    \item 直观告诉我们两个变量间的因果关系（在给定的因果假设下）是否可以识别：图形化的因果假设
+        \item Path: 变量间的任何路径； Causal path: 所有箭头都背向处理变量，指向结果变量
+        \item Collider: 一个变量在一条路径上被两个箭头指向
+        \item Open path: 路径上的非collider没有被condition on，collider则被condition on了
+        \item 因果效应可识别性：当两个变量之间所有的open path都是causal path
+    \end{itemize}
+    \vspace{-4em}
+\begin{tikzpicture}
+    \node at (0,0) {};
+    \node at (1,1) {};
+      \node[minimum width=1cm,draw,circle] (a) at (2,-1) {A};
+      \node[minimum width=1cm,draw,circle] (y) at ($(a)+(2,0)$) {Y};
+      \node[minimum width=1cm,draw,circle] (x) at ($(a)+(0,-2)$) {X};
+      \node[minimum width=1cm,draw,circle] (u) at ($(a)+(2,-2)$) {U};
+    \draw[->, thick] (a) -- (y);
+    \draw[->, thick] (x) -- (a);
+    \draw[->, thick] (x) -- (y);
+    \draw[->, thick] (u) -- (a);
+    \draw[->, thick] (u) -- (y);
+    
+     \node[minimum width=1cm,draw,circle] (a_1) at (8,-1) {A};
+     \node[minimum width=1cm,draw,circle] (y_1) at ($(a_1)+(0,-2)$) {Y};
+     \node[minimum width=1cm,draw,circle] (p_1) at ($(a_1)+(2,-1)$) {P};
+    \draw[->, thick] (a_1) -- (p_1);
+    \draw[->, thick] (y_1) -- (p_1);
+    \draw[->, thick] (a_1) -- (y_1);
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{控制变量：越多越好吗？}
+    \vspace{-2em}
+\begin{tikzpicture}
+    \node at (0,0) {};
+    \node at (1,1) {};
+      \node[minimum width=1cm,draw,circle] (a) at (2,-1) {A};
+      \node[minimum width=1cm,draw,circle] (y) at ($(a)+(2,0)$) {Y};
+      \node[minimum width=1cm,draw,circle] (x) at ($(a)+(0,-2)$) {X};
+      \node[minimum width=1cm,draw,circle] (u) at ($(a)+(2,-2)$) {U};
+    \draw[->, thick] (a) -- (y);
+    \draw[->, thick] (x) -- (a);
+    \draw[->, thick] (x) -- (y);
+    \draw[->, thick] (u) -- (a);
+    \draw[->, thick] (u) -- (y);
+    
+     \node[minimum width=1cm,draw,circle] (a_1) at (8,-1) {A};
+     \node[minimum width=1cm,draw,circle] (y_1) at ($(a_1)+(0,-2)$) {Y};
+     \node[minimum width=1cm,draw,circle] (p_1) at ($(a_1)+(2,-1)$) {P};
+    \draw[->, thick] (a_1) -- (p_1);
+    \draw[->, thick] (y_1) -- (p_1);
+    \draw[->, thick] (a_1) -- (y_1);
+\end{tikzpicture}
+    \vspace{2em}
+\begin{itemize}
+    \item 控制变量的选择应该基于对变量间因果关系的假设
+    \item 一般而言，要控制发生在处理变量之前的变量
+    \item 一般而言，不要控制发生在处理变量之后的变量
+\end{itemize}
+\end{frame}
+
+\begin{frame}{控制变量：越多越好吗？}
+    \begin{itemize}
+        \item 但一般以外，也有很多例外
+        \vspace{1em}
+        \item 有时候，发生在处理变量之前的变量也可以是collider. \\
+        Hünermund, Paul, Beyers Louw, and Itamar Caspi. "Double Machine Learning and Bad Controls--A Cautionary Tale." arXiv preprint arXiv:2108.11294 (2021).
+        \vspace{1em}
+        \item 有时候，控制发生在处理变量之后的变量也可以降低估计偏误。\\
+        Elwert, Felix, and Fabian T. Pfeffer. "The future strikes back: using future treatments to detect and reduce hidden bias." Sociological Methods \& Research (2019). \\
+        Groenwold, Rolf HH, Tom M. Palmer, and Kate Tilling. "To Adjust or Not to Adjust? When a “Confounder” Is Only Measured After Exposure." Epidemiology 32.2 (2021).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{关于DAG入门的推荐阅读}
+\vspace{3em}
+    Elwert, Felix. "Graphical causal models." Handbook of causal analysis for social research. Springer, Dordrecht, 2013. 245-273. \\
+\vspace{3em}    
+    Elwert, Felix, and Christopher Winship. "Endogenous selection bias: The problem of conditioning on a collider variable." Annual review of sociology 40 (2014): 31-53.
+\end{frame}
+
+\begin{frame}{交互项的对称性问题}
+\begin{align*}
+Y= \alpha + \beta_1 A + \beta_2 M + \beta_3 AM + \beta_4 X + \epsilon
+\end{align*}
+    \begin{itemize}
+        \item<1-> A调节M和M调节A是一回事吗？
+        \vspace{1em}
+        \item<2-> 作为一种回归模型中的统计工具，交互项当然是对称的。
+        \vspace{1em}
+        \item<2-> 同一个交互项，可以对应不同的estimand，进而有着不同的对称性。
+        \vspace{0em}
+        \item<2-> 潜在结果和DAG在这一问题上都很有用。
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{交互项背后的estimand可能有哪些？}
+    \begin{itemize}
+        \item Causal interaction effect \\
+        \vspace{-1.2em}
+        \begin{flalign*}
+        &\phantom{{}={}} \underbrace{E[Y(A=1,M=1)]-E[Y(A=0,M=1)]}_{\text{干预使得所有人上清北时农村出身的效应}}  \\
+        &- \underbrace{\lbrace E[Y(A=1,M=0)]-E[Y(A=0,M=0)] \rbrace}_{\text{干预使得所有人\textbf{不}上清北时农村出身的效应}}
+        \end{flalign*}
+        \item 两个变量在estimand中都是被干预的对象，都是潜在结果的定义的一部分
+    \end{itemize}
+    \vspace{-2.3em}
+    \begin{tikzpicture}
+    \node at (0,0) {};
+    \node at (1,1) {};
+        \node[minimum width=0.6cm,draw,circle] (a) at (4,-0.5) {A};
+        \node[minimum width=0.6cm,draw,circle] (m) at ($(a)+(2,0)$) {M};
+        \node[minimum width=0.6cm,draw,circle] (y) at ($(a)+(4,0)$) {Y};
+        \node[minimum width=0.6cm,draw,circle] (l) at ($(a)+(2,1.5)$) {L};
+        \node[minimum width=0.6cm,draw,circle] (x) at ($(a)+(1,-1.5)$) {X};
+        \node[minimum width=0.6cm,draw,circle] (c) at ($(a)+(-0.5,1.5)$) {C};
+    \draw[->, line width=0.5mm, blue] (a) -- (m);
+    \draw[->, line width=0.5mm, blue] (m) -- (y);
+    \draw[->, line width=0.5mm, orange] ($(m)+(0.36,-0.2)$) -- ($(y)+(-0.34,-0.2)$);
+    \draw[->, line width=0.5mm, blue] (a) -- (l);
+    \draw[->, line width=0.5mm, blue] (l) -- (y);
+    \draw[->, line width=0.5mm, blue] (l) -- (m);
+    \draw[->, thick] (c) -- (a);
+    \draw[->, thick] (x) -- (a);
+    \draw[->, thick] (x) -- (m);
+    \draw[->, thick] (c) to [bend left = 50] (y);
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{交互项背后的estimand可能有哪些？}
+\begin{itemize}
+    \item Effect modification 
+    \begin{align*}
+        E[Y(M=1)-Y(M=0)|A=1]-E[Y(M=1)-Y(M=0)|A=0]
+    \end{align*}
+    \item 只有M在estimand中是被干预的对象；潜在结果只以M来定义: A调节M的效应
+\end{itemize}
+    \begin{tikzpicture}
+    \node at (0,0) {};
+    \node at (1,1) {};
+        \node[minimum width=0.6cm,draw,rectangle,very thick] (a) at (4,-0.5) {A};
+        \node[minimum width=0.6cm,draw,circle] (m) at ($(a)+(2,0)$) {M};
+        \node[minimum width=0.6cm,draw,circle] (y) at ($(a)+(4,0)$) {Y};
+        \node[minimum width=0.6cm,draw,circle] (l) at ($(a)+(2,1.5)$) {L};
+        \node[minimum width=0.6cm,draw,circle] (x) at ($(a)+(1,-1.5)$) {X};
+        \node[minimum width=0.6cm,draw,circle] (c) at ($(a)+(-0.5,1.5)$) {C};
+    \draw[->, thick] (a) -- (m);
+    \draw[->, line width=0.5mm, orange] (m) -- (y);
+    \draw[->, thick] (a) -- (l);
+    \draw[->, thick] (l) -- (y);
+    \draw[->, thick] (l) -- (m);
+    \draw[->, thick] (c) -- (a);
+    \draw[->, thick] (x) -- (a);
+    \draw[->, thick] (x) -- (m);
+    \draw[->, thick] (c) to [bend left = 50] (y);
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{交互项背后的estimand可能有哪些？}
+\begin{itemize}
+    \item 可以相反地定义M调节A的效应吗？
+    \begin{align*}
+        E[Y(A=1)-Y(A=0)|M=1]-E[Y(A=1)-Y(A=0)|M=0]
+    \end{align*}
+\end{itemize}
+    \begin{tikzpicture}
+    \node at (0,0) {};
+    \node at (1,1) {};
+        \node[minimum width=0.6cm,draw,circle] (a) at (4,-0.5) {A};
+        \node[minimum width=0.6cm,draw,rectangle,very thick] (m) at ($(a)+(2,0)$) {M};
+        \node[minimum width=0.6cm,draw,circle] (y) at ($(a)+(4,0)$) {Y};
+        \node[minimum width=0.6cm,draw,circle] (l) at ($(a)+(2,1.5)$) {L};
+        \node[minimum width=0.6cm,draw,circle] (x) at ($(a)+(1,-1.5)$) {X};
+        \node[minimum width=0.6cm,draw,circle] (c) at ($(a)+(-0.5,1.5)$) {C};
+    \draw[->, thick] (a) -- (m);
+    \draw[->, thick] (m) -- (y);
+    \draw[->, thick] (a) -- (l);
+    \draw[->, thick] (l) -- (y);
+    \draw[->, thick] (l) -- (m);
+    \draw[->, thick] (c) -- (a);
+    \draw[->, thick] (x) -- (a);
+    \draw[->, thick] (x) -- (m);
+    \draw[->, thick] (c) to [bend left = 50] (y);
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{交互项背后的estimand可能有哪些: 总结}
+\begin{itemize}
+    \item 所以，当estimand是因果交互效应时，两个变量的地位是对称的，都是因果变量；当estimand是调节效应时，只有其一是因果变量。
+    \item 回归模型里的交互项可以在不同的因果假设下识别不同的estimand。
+    \item 不同的estimand意味着不同的因果假设和估计方法。所以，我们应当从estimand出发推出estimator，而非相反。
+    \vspace{1em}
+    \item Further readings \\
+    \hspace{1em} VanderWeele, Tyler J. "On the distinction between interaction and effect modification." Epidemiology 20.6 (2009): 863-871.\\
+    \hspace{1em} Keele, Luke, and Randolph T. Stevenson. "Causal interaction and effect modification: same model, different concepts." Political Science Research and Methods 9.3 (2021): 641-649.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{2021年诺奖：工具变量与局部平均效应（LATE)}
+\vspace{1em}
+David Card, “for his empirical contributions to labour economics” \\
+\vspace{1em}
+Joshua D. Angrist and Guido W. Imbens, “for their methodological contributions to the analysis of causal relationships”
+\vspace{1em}
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[height=5cm]{Screen Shot 2021-10-24 at 11.40.36 PM.png} 
+    \end{figure}  
+\end{frame}
+
+\begin{frame}{2021年诺奖：工具变量与局部平均效应（LATE)}
+    \begin{itemize}
+        \item 类似于我们为多元回归和交互项寻找estimand，Angrist and Imbens (1994), Angrist, Imbens, and Rubin (1996) 为IV  estimator找到了一个estimand。
+        \item IV estimator: $\frac{Cov(Z,Y)}{Cov(Z,A)}$
+        \item Local (complier) average treatment effect: $E[Y(A=1)-Y(A=0)|A(Z=1)-A(Z=0)=1]$
+    \end{itemize}
+    \vspace{2em}
+    \begin{tikzpicture}
+    \node at (0,0) {};
+    \node at (1,1) {};
+    \node[minimum width=0.6cm,draw,circle] (z) at (3,0) {Z};
+    \node[minimum width=0.6cm,draw,circle] (a) at ($(z)+(2,0)$) {A};
+    \node[minimum width=0.6cm,draw,circle] (y) at ($(z)+(4,0)$) {Y};
+    \node[minimum width=0.6cm,draw,circle] (u) at ($(z)+(3,1.5)$) {U};
+    \draw[->, thick] (z) -- (a);
+    \draw[->, thick] (a) -- (y);
+    \draw[->, thick] (u) -- (a);
+    \draw[->, thick] (u) -- (y);
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{工具变量与局部平均效应（LATE)}
+因果假设：
+\begin{itemize}
+    \item Consistency 
+    \item Random assignment of Z: $A(Z=z) \indep Z$; $Y(Z=z,A=a) \indep Z$ (but see Pearl (2009), p.248)
+    \item Exclusion restriction: $Y(Z=1, A=a)=Y(Z=0, A=a)$
+    \item Relevance: $E[A(Z=1)-A(Z=0)]>0$
+    \item Monotonicity: $A_i(Z_i=1) \geq A_i(Z_i=0)$
+\end{itemize}
+\vspace{1em}
+    \begin{tikzpicture}
+    \node at (0,0) {};
+    \node at (1,1) {};
+    \node[minimum width=0.6cm,draw,circle] (z) at (3,0) {Z};
+    \node[minimum width=0.6cm,draw,circle] (a) at ($(z)+(2,0)$) {A};
+    \node[minimum width=0.6cm,draw,circle] (y) at ($(z)+(4,0)$) {Y};
+    \node[minimum width=0.6cm,draw,circle] (u) at ($(z)+(3,1.5)$) {U};
+    \draw[->, thick] (z) -- (a);
+    \draw[->, thick] (a) -- (y);
+    \draw[->, thick] (u) -- (a);
+    \draw[->, thick] (u) -- (y);
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{工具变量与局部平均效应（LATE): 拓展}
+\begin{itemize}
+\vspace{1em}
+    \item 如果处理效应对所有人都是一样的呢？
+    \item[] 再次反映出相同的统计工具，基于不同的因果假设，可以识别不同的estimand
+\vspace{1em}
+    \item 可以用DAG来表示LATE吗？
+    \item[] Steiner, Peter M., et al. "Graphical models for quasi-experimental designs." Sociological methods \& research 46.2 (2017): 155-188.
+\vspace{1em}
+    \item 工具变量可以用来估计ATE和ATT吗？
+    \item[] Zhou, Xiang, and Yu Xie. "Heterogeneous treatment effects in the presence of self-selection: a propensity score perspective." Sociological Methodology 50.1 (2020): 350-385.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{因果推断教科书：从入门到专题}
+\vspace{-0.6em}
+Mostly Harmless Econometrics: An Empiricist's Companion
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{9780691120355.jpeg} 
+        \includegraphics[height=3cm]{Joshua Angrist Profile2.jpeg} 
+    \end{figure}
+Counterfactuals and Causal Inference: Methods and Principles for Social Research
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{9781107694163.jpeg} 
+        \includegraphics[height=3cm]{JHU7474-smaller-size-cropped.jpeg} 
+        \includegraphics[height=3cm]{winship.jpeg} 
+    \end{figure}
+\end{frame}
+
+\begin{frame}{因果推断教科书：从入门到专题}
+Causal Inference for Statistics, Social, and Biomedical Sciences
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{9780521885881.jpeg} 
+        \includegraphics[height=3cm]{guido_imbens.jpeg} 
+        \includegraphics[height=3cm]{Donald-Rubin-HS.jpeg} 
+    \end{figure}
+Handbook of Causal Analysis for Social Research
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{978-94-007-6094-3.jpeg} 
+        \includegraphics[height=3cm]{JHU7474-smaller-size-cropped.jpeg} 
+    \end{figure}
+\end{frame}
+
+\begin{frame}{因果推断教科书：从入门到专题}
+Explanation in causal inference: methods for mediation and interaction
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{9780199325870.jpeg} 
+        \includegraphics[height=3cm]{VanderWeele-e1556321271406.jpeg} 
+    \end{figure}
+Causality: Models, Reasoning and Inference
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{9780521895606.jpeg} 
+        \includegraphics[height=3cm]{jp-seas-2018.jpeg} 
+    \end{figure}   
+\end{frame}
+
+\begin{frame}{因果推断教科书：从入门到专题}
+Causal Inference: The Mixtape
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{cover.jpeg} 
+        \includegraphics[height=3cm]{aboutme.jpeg} 
+    \end{figure}   
+Causal Inference: What If
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{Screen Shot 2021-10-24 at 11.28.09 PM.png} 
+        \includegraphics[height=3cm]{wmQj1PAi.jpeg} 
+        \includegraphics[height=3cm]{James_Robins.jpeg} 
+    \end{figure}   
+\end{frame}
+
+\begin{frame}{两位华人因果推断新星}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+        \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{img_3656_1.jpeg} 
+    \end{figure}  
+    \begin{itemize}
+        \item Xiang Zhou
+        \item Causal mediation analysis; marginal treatment effect
+    \end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+        \begin{figure}[htp]
+        \centering
+        \includegraphics[height=3cm]{an-weihua.jpeg} 
+    \end{figure}  
+        \begin{itemize}
+        \item Weihua An 
+        \item Peer effects; treatment interference 
+    \end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{总结}
+    \begin{itemize}
+        \item Estimand至关重要，从理论到方法的过程即是从estimand到estimator的过程（formalized theorization）。
+        \vspace{1em}
+        \item 因果推断回答关于反事实的问题，为政策干预提供直接的证据。
+        \vspace{1em}
+        \item 因果推断的理论传统有很多，潜在因果和DAG的框架在实践中可以帮助我们厘清因果estimand，所需的因果假设，以及适用的估计方法。
+        \vspace{1em}
+        \item 在四个实例中，我们意识到
+        \item[] 多元回归用于估计ATE依赖于一系列因果假设和函数形式假设。
+        \item[] 控制变量的选择依赖于因果假设。
+        \item[] 因果交互效应不同于调节效应。
+        \item[] 工具变量在一系列因果假设下可以用于估计局部平均处理效应。
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{总结}
+\begin{center}
+   \Large 谢谢！ \\
+   \normalsize  \texttt{@AngYu\_soci} \\
+\end{center}
+        \begin{figure}[htp]
+        \centering
+        \includegraphics[height=5cm]{image003.png} 
+    \end{figure}  
+\end{frame}
+
+\end{document}
